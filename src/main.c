@@ -548,6 +548,16 @@ void vb_update_input_style(void)
 void vb_update_urlbar(const char *uri)
 {
     Gui *gui = &vb.gui;
+#ifdef FEATURE_PROFILE_INDICATOR
+    char *prof_uri;
+
+    if (vb.config.profile) {
+      prof_uri = g_strdup_printf("[%s] %s", vb.config.profile, uri);
+    } else {
+      prof_uri = g_strdup(uri);
+    }
+#endif
+
 #ifdef FEATURE_HISTORY_INDICATOR
     gboolean back, fwd;
     char *str;
@@ -557,14 +567,40 @@ void vb_update_urlbar(const char *uri)
 
     /* show history indicator only if there is something to show */
     if (back || fwd) {
-        str = g_strdup_printf("%s [%s]", uri, back ? (fwd ? "-+" : "-") : "+");
+        str = g_strdup_printf(
+            "%s [%s]", 
+#ifdef FEATURE_PROFILE_INDICATOR
+            prof_uri, 
+#else
+            uri,
+#endif
+            back ? (fwd ? "-+" : "-") : "+"
+        );
         gtk_label_set_text(GTK_LABEL(gui->statusbar.left), str);
         g_free(str);
     } else {
-        gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
+        gtk_label_set_text(
+            GTK_LABEL(gui->statusbar.left), 
+#ifdef FEATURE_PROFILE_INDICATOR
+            prof_uri
+#else
+            uri
+#endif
+        );
     }
 #else
-    gtk_label_set_text(GTK_LABEL(gui->statusbar.left), uri);
+    gtk_label_set_text(
+        GTK_LABEL(gui->statusbar.left), 
+#ifdef FEATURE_PROFILE_INDICATOR
+        prof_uri
+#else
+        uri
+#endif
+    );
+#endif
+
+#ifdef FEATURE_PROFILE_INDICATOR
+    g_free(prof_uri);
 #endif
 }
 
@@ -1486,22 +1522,50 @@ static void title_changed_cb(WebKitWebView *webview, WebKitWebFrame *frame, cons
 
 static void update_title(void)
 {
+#ifdef FEATURE_TITLE_PROFILE
+    /* show profile name */
+    char *prof_title;
+
+    if (vb.config.profile) {
+      prof_title = g_strdup_printf(
+          "[%s] %s",
+          vb.config.profile, 
+          vb.state.title ? vb.state.title : ""
+      );
+    } else {
+      prof_title = g_strdup(vb.state.title ? vb.state.title : "");
+    }
+#endif
+
 #ifdef FEATURE_TITLE_PROGRESS
     /* show load status of page or the downloads */
     if (vb.state.progress != 100) {
         char *title = g_strdup_printf(
             "[%i%%] %s",
             vb.state.progress,
+#ifdef FEATURE_TITLE_PROFILE
+            prof_title
+#else
             vb.state.title ? vb.state.title : ""
+#endif
         );
         gtk_window_set_title(GTK_WINDOW(vb.gui.window), title);
         g_free(title);
+#ifdef FEATURE_TITLE_PROFILE
+        g_free(prof_title);
+#endif
         return;
     }
 #endif
+
+#ifdef FEATURE_TITLE_PROFILE
+    gtk_window_set_title(GTK_WINDOW(vb.gui.window), prof_title);
+    g_free(prof_title);
+#else
     if (vb.state.title) {
         gtk_window_set_title(GTK_WINDOW(vb.gui.window), vb.state.title);
     }
+#endif
 }
 
 static void set_uri(const char *uri)

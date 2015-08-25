@@ -34,8 +34,12 @@
 #define FEATURE_QUEUE
 /* show load progress in window title */
 #define FEATURE_TITLE_PROGRESS
+/* show profile name in window title */
+#define FEATURE_TITLE_PROFILE
 /* should the history indicator [+-] be shown in status bar after url */
 #define FEATURE_HISTORY_INDICATOR
+/* should the profile indicator be shown in status bar before url */
+#define FEATURE_PROFILE_INDICATOR
 /* show wget style progressbar in status bar */
 #define FEATURE_WGET_PROGRESS_BAR
 #ifdef HAS_GTK3
